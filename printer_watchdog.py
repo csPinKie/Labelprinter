@@ -131,6 +131,8 @@ class LabelHandler(FileSystemEventHandler):
             shutil.copy(file_path, final_print_file)
 
         # --- DRUCKEN ---
+        print(f"Wecke USB-Kabel auf (Reset)...") #added this because my CH340S-Adaptercable, please use USB Type B and comment this out
+        subprocess.run(["sudo", "usbreset", "1a86:7584"]) #added this because my CH340S-Adaptercable, please use USB Type B and comment this out
         print(f"Sende an Drucker '{PRINTER_NAME}'...")
         cmd = ["lp", "-d", PRINTER_NAME, "-o", "fit-to-page", final_print_file]
         subprocess.run(cmd, check=True)
