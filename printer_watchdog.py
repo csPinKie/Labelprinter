@@ -7,7 +7,7 @@ from watchdog.events import FileSystemEventHandler
 from pypdf import PdfReader, PdfWriter
 
 # --- KONFIGURATION RASPBERRY PI ---
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 BASE_DIR = "/home/admin/labels"
 WATCH_DIR = os.path.join(BASE_DIR, "input")
 PROCESSED_DIR = os.path.join(BASE_DIR, "processed")
