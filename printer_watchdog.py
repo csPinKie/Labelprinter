@@ -7,7 +7,7 @@ from watchdog.events import FileSystemEventHandler
 from pypdf import PdfReader, PdfWriter
 
 # --- KONFIGURATION RASPBERRY PI ---
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 BASE_DIR = "/home/admin/labels"
 WATCH_DIR = os.path.join(BASE_DIR, "input")
 PROCESSED_DIR = os.path.join(BASE_DIR, "processed")
@@ -135,10 +135,24 @@ class LabelHandler(FileSystemEventHandler):
         subprocess.run(["sudo", "usbreset", "1a86:7584"]) #added this because my CH340S-Adaptercable, please use USB Type B and comment this out
         time.sleep(3) #also bandaid for CH340S-Adaptercable, please use USB Type B and comment this out
         subprocess.run(["sudo", "cupsenable", PRINTER_NAME]) #also bandaid for CH340S-Adaptercable, please use USB Type B and comment this out
+        # --- DRUCKEN ---
         print(f"Sende an Drucker '{PRINTER_NAME}'...")
-        cmd = ["lp", "-d", PRINTER_NAME, "-o", "fit-to-page", final_print_file]
-        subprocess.run(cmd, check=True)
-        print("Druckauftrag gesendet.")
+        try:
+            # Stelle sicher, dass CUPS bereit ist (falls ein vorheriger Job mal gehakt hat)
+            subprocess.run(["sudo", "cupsenable", PRINTER_NAME], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            # Der eigentliche Druckbefehl
+            cmd = ["lp", "-d", PRINTER_NAME, "-o", "fit-to-page", final_print_file]
+            subprocess.run(cmd, check=True)
+            print("Druckauftrag erfolgreich gesendet.")
+
+            # Kurze Pause (1 Sekunde reicht bei nativem USB völlig aus),
+            # um CUPS Zeit zu geben, die Datei freizugeben
+            time.sleep(1)
+
+        except subprocess.CalledProcessError as e:
+            print(f"!!! FEHLER BEIM DRUCKEN: {e}")
+            raise  # Wirft den Fehler weiter, damit die Datei im error-Ordner landet
 
         # Aufräumen
         if os.path.exists(file_path):

@@ -5,8 +5,8 @@ After=network.target cups.service
 [Service]
 Type=simple
 User=admin
-WorkingDirectory=/home/admin
-ExecStart=/usr/bin/python3 /home/admin/print_watchdog.py
+WorkingDirectory=/home/admin/label_server
+ExecStart=/usr/bin/python3 /home/admin/printer_watchdog.py
 Restart=on-failure
 RestartSec=5
 
