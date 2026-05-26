@@ -7,7 +7,7 @@ from watchdog.events import FileSystemEventHandler
 from pypdf import PdfReader, PdfWriter
 
 # --- KONFIGURATION RASPBERRY PI ---
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 BASE_DIR = "/home/admin/labels"
 WATCH_DIR = os.path.join(BASE_DIR, "input")
 PROCESSED_DIR = os.path.join(BASE_DIR, "processed")
@@ -125,6 +125,29 @@ class LabelHandler(FileSystemEventHandler):
         elif "shipperlabel" in filename_lower:
             print("Modus: Amazon (Direct Copy)")
             shutil.copy(file_path, final_print_file)
+
+        elif "6x4" in filename_lower or "direkt" in filename_lower:
+            print("Modus: 6x4 Zoll Standard (Kein Crop - Direkt-Druck)")
+            # Einfach nur kopieren, kein Zuschnitt!
+            shutil.copy(file_path, final_print_file)
+
+            print(f"Sende an Drucker '{PRINTER_NAME}' (6x4 Format)...")
+            try:
+                subprocess.run(["sudo", "cupsenable", PRINTER_NAME], stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
+                # Etikettenformat (4x6 Zoll / 102x152mm)
+                cmd = ["lp", "-d", PRINTER_NAME, "-o", "media=Custom.4x6in", final_print_file]
+                subprocess.run(cmd, check=True)
+                print("6x4 Druckauftrag erfolgreich gesendet.")
+                time.sleep(1)
+            except subprocess.CalledProcessError as e:
+                print(f"!!! FEHLER BEIM DRUCKEN: {e}")
+                raise
+
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            print("Input bereinigt.\n")
+            return
 
         else:
             print("Modus: Standard (Direct Copy)")
